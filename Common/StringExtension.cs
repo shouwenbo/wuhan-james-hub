@@ -21,6 +21,9 @@ namespace Common
 
         public static bool IsPositiveInteger(this string input) => IsMatchRegex(input, @"^\d+$");
 
+        public static bool IsPositiveIntegerOrSplitNumber(this string input) => IsMatchRegex(input, @"^\d+(-\d+)*$");
+
+
         public static bool IsAllKorean(this string input) => IsMatchRegex(input, @"^[\p{IsHangulSyllables}]+$");
         public static bool IsKoreanName(this string input) => IsMatchRegex(input, @"^[\p{IsHangulSyllables}]+(\([1-9]\))?$");
 

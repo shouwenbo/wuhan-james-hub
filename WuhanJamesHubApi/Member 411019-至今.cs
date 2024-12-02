@@ -289,9 +289,9 @@ namespace WuhanJamesHubApi
             {
                 result.Add($"排序:{Index} 不能为空");
             }
-            else if (!Index.IsPositiveInteger())
+            else if (!Index.IsPositiveIntegerOrSplitNumber())
             {
-                result.Add($"排序:{Index} 必须为正整数");
+                result.Add($"排序:{Index} 必须为正整数或期数格式");
             }
             if (string.IsNullOrWhiteSpace(KoreanName))
             {
@@ -364,54 +364,57 @@ namespace WuhanJamesHubApi
             }
             else 
             {
-                if (!CurrentAddressChinese.IsChineseAddress() && !CurrentAddressChinese.IsKoreanAddress())
+                if (!CurrentAddressChinese.IsKoreanAddress()) // 411202 韩文地址默认正确（不为韩文地址才需要继续检查）
                 {
-                    result.Add($"现住址:{CurrentAddressChinese} 不符合规范");
-                }
-                else
-                {
-                    if (new Regex(@"\s{2,}").IsMatch(CurrentAddressChinese))
+                    if (!CurrentAddressChinese.IsChineseAddress() && !CurrentAddressChinese.IsKoreanAddress())
                     {
-                        result.Add($"现住址:{CurrentAddressChinese} 中间存在连续空格，请调整");
+                        result.Add($"现住址:{CurrentAddressChinese} 不符合规范");
                     }
                     else
                     {
-                        if (new Regex(@"^\s").IsMatch(CurrentAddressChinese))
+                        if (new Regex(@"\s{2,}").IsMatch(CurrentAddressChinese))
                         {
-                            result.Add($"现住址:{CurrentAddressChinese} 开头存在空格，请删除");
+                            result.Add($"现住址:{CurrentAddressChinese} 中间存在连续空格，请调整");
                         }
                         else
                         {
-                            if (new Regex(@"\s$").IsMatch(CurrentAddressChinese))
+                            if (new Regex(@"^\s").IsMatch(CurrentAddressChinese))
                             {
-                                result.Add($"现住址:{CurrentAddressChinese} 结尾存在空格，请删除");
+                                result.Add($"现住址:{CurrentAddressChinese} 开头存在空格，请删除");
                             }
                             else
                             {
-                                var c_a_p = CurrentAddressChinese.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                                if (c_a_p.Length < 2)
+                                if (new Regex(@"\s$").IsMatch(CurrentAddressChinese))
                                 {
-                                    result.Add($"现住址:{CurrentAddressChinese} 缺少空格，请补充");
+                                    result.Add($"现住址:{CurrentAddressChinese} 结尾存在空格，请删除");
                                 }
                                 else
                                 {
-                                    if (AddressConstants.ChineseCityDic.ContainsKey(c_a_p[0]))
+                                    var c_a_p = CurrentAddressChinese.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                                    if (c_a_p.Length < 2)
                                     {
-                                        if (!AddressConstants.ChineseCityDic[c_a_p[0]].Contains(c_a_p[1]))
-                                        {
-                                            result.Add($"现住址:{CurrentAddressChinese} 第二个词‘{c_a_p[1]}’错误，‘{c_a_p[0]}’后面紧接的单词必须为‘{string.Join(',', AddressConstants.ChineseCityDic[c_a_p[0]])}’");
-                                        }
-                                    }
-                                    else if (AddressConstants.KoreanCityDic.ContainsKey(c_a_p[0]))
-                                    {
-                                        if (!AddressConstants.KoreanCityDic[c_a_p[0]].Contains(c_a_p[1]))
-                                        {
-                                            result.Add($"现住址:{CurrentAddressChinese} 第二个词‘{c_a_p[1]}’错误，‘{c_a_p[0]}’后面紧接的单词必须为‘{string.Join(',', AddressConstants.KoreanCityDic[c_a_p[0]])}’");
-                                        }
+                                        result.Add($"现住址:{CurrentAddressChinese} 缺少空格，请补充");
                                     }
                                     else
                                     {
-                                        result.Add($"现住址:{CurrentAddressChinese} 第一个词‘{c_a_p[0]}’错误，第一个次次必须为 一级行政区 或 特别行政区 或 直辖市 或 海外国家简称");
+                                        if (AddressConstants.ChineseCityDic.ContainsKey(c_a_p[0]))
+                                        {
+                                            if (!AddressConstants.ChineseCityDic[c_a_p[0]].Contains(c_a_p[1]))
+                                            {
+                                                result.Add($"现住址:{CurrentAddressChinese} 第二个词‘{c_a_p[1]}’错误，‘{c_a_p[0]}’后面紧接的单词必须为‘{string.Join(',', AddressConstants.ChineseCityDic[c_a_p[0]])}’");
+                                            }
+                                        }
+                                        else if (AddressConstants.KoreanCityDic.ContainsKey(c_a_p[0]))
+                                        {
+                                            if (!AddressConstants.KoreanCityDic[c_a_p[0]].Contains(c_a_p[1]))
+                                            {
+                                                result.Add($"现住址:{CurrentAddressChinese} 第二个词‘{c_a_p[1]}’错误，‘{c_a_p[0]}’后面紧接的单词必须为‘{string.Join(',', AddressConstants.KoreanCityDic[c_a_p[0]])}’");
+                                            }
+                                        }
+                                        else
+                                        {
+                                            result.Add($"现住址:{CurrentAddressChinese} 第一个词‘{c_a_p[0]}’错误，第一个次次必须为 一级行政区 或 特别行政区 或 直辖市 或 海外国家简称");
+                                        }
                                     }
                                 }
                             }
@@ -426,34 +429,37 @@ namespace WuhanJamesHubApi
             }
             else
             {
-                if (!IDCardAddressChinese.IsChineseAddress() && !IDCardAddressChinese.IsKoreanAddress())
+                if (!IDCardAddressChinese.IsKoreanAddress()) // 411202 韩文地址默认正确（不为韩文地址才需要继续检查）
                 {
-                    result.Add($"身份证地址:{IDCardAddressChinese} 不符合规范");
-                }
-                else
-                {
-                    if (new Regex(@"\s{2,}").IsMatch(IDCardAddressChinese))
+                    if (!IDCardAddressChinese.IsChineseAddress() && !IDCardAddressChinese.IsKoreanAddress())
                     {
-                        result.Add($"身份证地址:{IDCardAddressChinese} 中间存在连续空格，请调整");
+                        result.Add($"身份证地址:{IDCardAddressChinese} 不符合规范");
                     }
                     else
                     {
-                        if (new Regex(@"^\s").IsMatch(IDCardAddressChinese))
+                        if (new Regex(@"\s{2,}").IsMatch(IDCardAddressChinese))
                         {
-                            result.Add($"身份证地址:{IDCardAddressChinese} 开头存在空格，请删除");
+                            result.Add($"身份证地址:{IDCardAddressChinese} 中间存在连续空格，请调整");
                         }
                         else
                         {
-                            if (new Regex(@"\s$").IsMatch(IDCardAddressChinese))
+                            if (new Regex(@"^\s").IsMatch(IDCardAddressChinese))
                             {
-                                result.Add($"身份证地址:{IDCardAddressChinese} 结尾存在空格，请删除");
+                                result.Add($"身份证地址:{IDCardAddressChinese} 开头存在空格，请删除");
                             }
                             else
                             {
-                                var i_a_p = IDCardAddressChinese.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                                if (i_a_p.Length < 2)
+                                if (new Regex(@"\s$").IsMatch(IDCardAddressChinese))
                                 {
-                                    result.Add($"身份证地址:{IDCardAddressChinese} 缺少空格，请补充");
+                                    result.Add($"身份证地址:{IDCardAddressChinese} 结尾存在空格，请删除");
+                                }
+                                else
+                                {
+                                    var i_a_p = IDCardAddressChinese.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                                    if (i_a_p.Length < 2)
+                                    {
+                                        result.Add($"身份证地址:{IDCardAddressChinese} 缺少空格，请补充");
+                                    }
                                 }
                             }
                         }
@@ -529,7 +535,7 @@ namespace WuhanJamesHubApi
             }
             #endregion
             #region 信仰情况
-            if (BirthReligion != "三自教" && BirthReligion != "无教" && BirthReligion != "佛教" && BirthReligion != "伊斯兰教" && BirthReligion != "天主教" && BirthReligion != "其他宗教")
+            if (/*vBirthReligion != "三自教" &&*/ BirthReligion != "无教" && BirthReligion != "佛教" && BirthReligion != "伊斯兰教" && BirthReligion != "天主教" && BirthReligion != "其他宗教")
             {
                 result.Add($"出身教团:{BirthReligion} 不符合规范");
             }
@@ -548,7 +554,7 @@ namespace WuhanJamesHubApi
                     result.Add($"出身教团:{BirthReligion} 不能填写母胎信仰");
                 }
             }
-            if ((BirthReligion == "三自教" || BirthReligion == "天主教" || BirthReligion == "无教") && !string.IsNullOrEmpty(OtherReligion))
+            if (BirthReligion == "无教" && !string.IsNullOrEmpty(OtherReligion))
             {
                 result.Add($"出身教团:{BirthReligion} 不需要填写其他宗教");
             }
@@ -559,7 +565,7 @@ namespace WuhanJamesHubApi
                     result.Add($"出身教团:{BirthReligion} 必须填写其他宗教种类");
                 }
             }
-            if (BirthReligion == "三自教" || BirthReligion == "天主教" || BirthReligion == "佛教" || BirthReligion == "伊斯兰教" || BirthReligion == "其他宗教")
+            if (BirthReligion != "无教")
             {
                 Match yearsOfFaithMatch = new Regex(@"^(\d+)年$").Match(YearsOfFaith);
                 if (yearsOfFaithMatch.Success)
@@ -575,10 +581,11 @@ namespace WuhanJamesHubApi
                     }
                     else
                     {
-                        if (MaternalFaith == "모태신앙" && ((actualAge - faithYear) >= 1))
-                        {
-                            result.Add($"母胎信仰，但是信仰年数是‘{YearsOfFaith}’，应该和年龄一致");
-                        }
+                        // 411202 母胎信仰是从独立去教会的日子算
+                        //if (MaternalFaith == "모태신앙" && ((actualAge - faithYear) >= 1))
+                        //{
+                        //    result.Add($"母胎信仰，但是信仰年数是‘{YearsOfFaith}’，应该和年龄一致");
+                        //}
                     }
                 }
                 else
@@ -1277,40 +1284,49 @@ namespace WuhanJamesHubApi
 
             var churchList = new List<Church>() {
                 new("中国武汉", "중국무한"),
-                new("中国上海", "중국상해"),
-                new("中国宁波", "중국녕파"),
-                new("中国北京", "중국북경"),
-                new("中国天津", "중국천진"),
-                new("中国青岛", "중국청도")
+                //new("中国上海", "중국상해"),
+                //new("中国宁波", "중국녕파"),
+                //new("中国北京", "중국북경"),
+                //new("中国天津", "중국천진"),
+                //new("中国青岛", "중국청도")
             };
 
-            if (!churchList.Any(p => p.KoreanName == BirthChurch) && !string.IsNullOrEmpty(SCJNumber))
+            if (BirthChurch == "中国武汉") // 中国武汉必须填写韩文名称
             {
-                result.Add($"家属:{Name} -> 出席教会:{BirthChurch} 不需要填写工号");
+                result.Add($"家属:{Name} -> 出席教会:{BirthChurch} 请改为 중국무한");
             }
-
-            if (churchList.Any(p => p.ChineseName == BirthChurch))
+            else if (BirthChurch != "중국무한" && BirthChurch.StartsWith("중국"))
             {
-                result.Add($"家属:{Name} -> 出席教会:{BirthChurch} 请改为 {churchList.First(p => p.ChineseName == BirthChurch).KoreanName}");
-            }
-
-            if (churchList.Any(p => p.KoreanName == BirthChurch))
-            {
-                Match scjMatch = new Regex(@"^\d{8}-\d{5}$").Match(SCJNumber);
-                if (string.IsNullOrEmpty(SCJNumber))
-                {
-                    result.Add($"家属:{Name} -> 出席教会:{BirthChurch} 工号不能为空");
-                }
-                else if (!scjMatch.Success && !SCJNumber.Contains('期'))
-                {
-                    result.Add($"家属:{Name} -> 出席教会:{BirthChurch} 工号格式错误");
-                }
+                result.Add($"家属:{Name} -> 出席教会:{BirthChurch} 直接填写中文即可，不要自己翻译");
             }
             else
             {
-                if (!string.IsNullOrEmpty(SCJNumber))
+                // 判断是否为ZP
+                if (BirthChurch == "중국무한" || BirthChurch.StartsWith("中国"))
                 {
-                    result.Add($"家属:{Name} -> 教团:{BirthChurch} 无需填写工号");
+                    #region 工号检查
+                    Match scjMatch = new Regex(@"^\d{8}-\d{5}$").Match(SCJNumber);
+                    if (string.IsNullOrEmpty(SCJNumber))
+                    {
+                        result.Add($"家属:{Name} -> 出席教会:{BirthChurch} 工号不能为空");
+                    }
+                    else if (!scjMatch.Success && !SCJNumber.Contains('期'))
+                    {
+                        result.Add($"家属:{Name} -> 出席教会:{BirthChurch} 工号格式错误");
+                    }
+                    #endregion
+                    if (string.IsNullOrEmpty(Birthday))
+                    {
+                        result.Add($"家属:{Name} -> 出席教会:{BirthChurch} 必须填写生日");
+                    }
+                }
+                // 如果不是ZP
+                else
+                {
+                    if (!string.IsNullOrEmpty(SCJNumber))
+                    {
+                        result.Add($"家属:{Name} -> 教团:{BirthChurch} 无需填写工号");
+                    }
                 }
             }
 
