@@ -1269,15 +1269,20 @@ namespace WuhanJamesHubApi
                 }
             }
 
-            // 411029 更新 出席教会 必须是 "无教" "중국무한" 四字以内不包含教的汉字
-            Match birthChurchMatch = new Regex(@"^(无教|중국무한|[^\u4e00-\u9fa5]*[^教]{1,4})$").Match(BirthChurch);
-            if (string.IsNullOrEmpty(BirthChurch))
+            if (string.IsNullOrWhiteSpace(BirthChurch))
             {
-                result.Add($"家属:{Name} -> 出席教会必须填写: 推荐填写 无教、중국무한");
+                if (!string.IsNullOrEmpty(SCJNumber))
+                {
+                    result.Add($"家属:{Name} -> 无需填写工号");
+                }
             }
-            else if (!birthChurchMatch.Success)
+            else
             {
-                result.Add($"家属:{Name} -> 出席教会:{BirthChurch} 不符合规范");
+                Match birthChurchMatch = new Regex(@"^(중국무한|[^\u4e00-\u9fa5]*[^教]{1,4})$").Match(BirthChurch);
+                if (!birthChurchMatch.Success)
+                {
+                    result.Add($"家属:{Name} -> 出席教会:{BirthChurch} 不符合规范");
+                }
             }
 
             #region 教会需要填写工号
@@ -1305,14 +1310,14 @@ namespace WuhanJamesHubApi
                 if (BirthChurch == "중국무한" || BirthChurch.StartsWith("中国"))
                 {
                     #region 工号检查
-                    Match scjMatch = new Regex(@"^\d{8}-\d{5}$").Match(SCJNumber);
+                    Match scjMatch = new Regex(@"^(\d{8}-\d{5}|\d{3}(-\d{1})?)$").Match(SCJNumber);
                     if (string.IsNullOrEmpty(SCJNumber))
                     {
                         result.Add($"家属:{Name} -> 出席教会:{BirthChurch} 工号不能为空");
                     }
                     else if (!scjMatch.Success && !SCJNumber.Contains('期'))
                     {
-                        result.Add($"家属:{Name} -> 出席教会:{BirthChurch} 工号格式错误");
+                        result.Add($"家属:{Name} -> 工号：{SCJNumber} 格式错误");
                     }
                     #endregion
                     if (string.IsNullOrEmpty(Birthday))
